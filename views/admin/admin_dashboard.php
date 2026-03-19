@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['user_name'])) {
     header("Location: admin_dashboard.php");
     exit();
 }
@@ -39,7 +39,7 @@ $totalAppointments = countTable($conn, "Appointments");
 
 <header>
     <h1>Trang Quản Trị</h1>
-    <p>Xin chào: <?php echo $_SESSION['username']; ?></p>
+    <p>Xin chào: <?php echo $_SESSION['user_name']; ?></p>
 </header>
 
 <nav>
