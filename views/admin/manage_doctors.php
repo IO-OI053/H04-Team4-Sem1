@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../client/login.php");
+    header("Location: ../authentication.php");
     exit;
 }
 
@@ -19,7 +19,7 @@ if (isset($_REQUEST['btnDelete'])) {
     $stmt = $conn->prepare($sql);
     $stmt->execute([$user_id]);
 
-    header("Location: admin.php");
+    header("Location: admin_dashboard.php");
     exit;
 }
 
@@ -53,54 +53,110 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Manage Doctors</title>
-    <style>
-        body { font-family: Arial; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #ccc; }
-        input { margin: 5px; padding: 8px; }
-    </style>
+<meta charset="UTF-8">
+<title>Quản lý Admin</title>
+<link rel="stylesheet" href="admin.css">
 </head>
 <body>
 
-<h2>Quản lý Bác sĩ</h2>
+<nav class="admin-nav">
+    <div class="nav-wrap">
+        <h4>MediConnect | Admin</h4>
+        <div class="nav-right">
+            Xin chào <b><?= htmlspecialchars($username) ?></b>
+            <a href="../logout.php" class="logout">Đăng xuất</a>
+        </div>
+    </div>
+</nav>
 
-<form method="POST">
-    <input type="text" name="username" placeholder="Username" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
-    <input type="text" name="fullname" placeholder="Họ tên" required>
-    <input type="text" name="phone" placeholder="SĐT" required>
-    <button type="submit" name="add">Thêm bác sĩ</button>
+<div class="layout">
+
+<aside class="admin-side">
+    <a class="side-link" href="admin_dashboard.php">Dashboard</a>
+    <a class="side-link" href="manage_doctors.php">Bác sĩ</a>
+    <a class="side-link" href="manage_cities.php">Thành phố</a>
+    <a class="side-link" href="manage_specializations.php">Chuyên khoa</a>
+</aside>
+
+<main class="admin-main">
+
+<h2>Quản lý Admin</h2>
+
+<?php if (isset($row_edit)): ?>
+<div class="box">
+<form method="post">
+
+<input type="hidden" name="user_id" value="<?= $row_edit['User_ID'] ?>">
+
+<label>Họ tên:</label>
+<input type="text" name="fullname" value="<?= htmlspecialchars($row_edit['FullName']) ?>">
+
+<label>Email:</label>
+<input type="email" name="email" value="<?= htmlspecialchars($row_edit['Email']) ?>">
+
+<label>SĐT:</label>
+<input type="text" name="phone" value="<?= htmlspecialchars($row_edit['Phone']) ?>">
+
+<br><br>
+<button type="submit" name="btnEdit" class="btn primary">Cập nhật</button>
+<a href="admins.php" class="btn">Hủy</a>
+
 </form>
+</div>
+<?php endif; ?>
 
-<br>
-
+<div class="box">
 <table>
-    <tr>
-        <th>ID</th>
-        <th>Họ tên</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Action</th>
-    </tr>
+<tr>
+    <th>ID</th>
+    <th>Username</th>
+    <th>Họ tên</th>
+    <th>Email</th>
+    <th>SĐT</th>
+    <th>Ngày tạo</th>
+    <th>Thao tác</th>
+</tr>
 
-    <?php while($row = $result->fetch_assoc()): ?>
-    <tr>
-        <td><?= $row['Doctor_ID'] ?></td>
-        <td><?= $row['FullName'] ?></td>
-        <td><?= $row['Email'] ?></td>
-        <td><?= $row['Phone'] ?></td>
-        <td>
-            <a href="?delete=<?= $row['Doctor_ID'] ?>" onclick="return confirm('Xóa bác sĩ?')">
-                Delete
-            </a>
-        </td>
-    </tr>
-    <?php endwhile; ?>
+<?php if (!empty($admins)): ?>
+<?php foreach ($admins as $row): ?>
+<tr>
+    <td><?= $row['User_ID'] ?></td>
+    <td><?= htmlspecialchars($row['UserName']) ?></td>
+    <td><?= htmlspecialchars($row['FullName']) ?></td>
+    <td><?= htmlspecialchars($row['Email']) ?></td>
+    <td><?= htmlspecialchars($row['Phone']) ?></td>
+    <td><?= date('d/m/Y', strtotime($row['Created_at'])) ?></td>
+    <td>
+        <a href="admins.php?action=edit&id=<?= $row['User_ID'] ?>">
+            ✏️
+        </a>
+
+        <form method="post" style="display:inline"
+              onsubmit="return confirm('Xóa admin này?')">
+            <input type="hidden" name="user_id" value="<?= $row['User_ID'] ?>">
+            <button name="btnDelete">🗑️</button>
+        </form>
+    </td>
+</tr>
+<?php endforeach; ?>
+<?php else: ?>
+<tr>
+    <td colspan="7">Chưa có admin</td>
+</tr>
+<?php endif; ?>
+
 </table>
+</div>
+
+</main>
+</div>
+
+<footer class="admin-footer">
+    © <?= date('Y') ?> MediConnect Admin Panel
+</footer>
 
 </body>
 </html>
+```
