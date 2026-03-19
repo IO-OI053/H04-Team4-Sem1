@@ -1,54 +1,55 @@
 <?php
 session_start();
-require_once "../connect.php";
 
-$db = new ConnectDB();
-$conn = $db->connection();
-
-
-if (isset($_POST['add'])) {
-
-    $username = $_POST['username'];
-    $email    = $_POST['email'];
-    $password = $_POST['password'];
-    $fullname = $_POST['fullname'];
-    $phone    = $_POST['phone'];
-
-    $sqlUser = "INSERT INTO Users (UserName, Email, Password, FullName, Phone, UserType, Created_at)
-                VALUES (?, ?, ?, ?, ?, 'Doctor', NOW())";
-
-    $stmt = $conn->prepare($sqlUser);
-    $stmt->bind_param("sssss", $username, $email, $password, $fullname, $phone);
-    $stmt->execute();
-
-    $user_id = $conn->insert_id;
-
-    $sqlDoctor = "INSERT INTO Doctors (ContactNumber, Created_at, User_ID)
-                  VALUES (?, NOW(), ?)";
-
-    $stmt2 = $conn->prepare($sqlDoctor);
-    $stmt2->bind_param("si", $phone, $user_id);
-    $stmt2->execute();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: ../client/login.php");
+    exit;
 }
 
-if (isset($_GET['delete'])) {
-    $doctor_id = $_GET['delete'];
+$username = $_SESSION['username'] ?? 'Admin';
 
+require_once '../../config/connectDB.php';
 
-    $result = $conn->query("SELECT User_ID FROM Doctors WHERE Doctor_ID = $doctor_id");
-    $row = $result->fetch_assoc();
-    $user_id = $row['User_ID'];
+$conn = ConnectDB::connection();
 
-    $conn->query("DELETE FROM Doctors WHERE Doctor_ID = $doctor_id");
+if (isset($_REQUEST['btnDelete'])) {
+    $user_id = (int)$_REQUEST['user_id'];
 
-    $conn->query("DELETE FROM Users WHERE User_ID = $user_id");
+    $sql = "DELETE FROM Users WHERE User_ID = ? AND UserType = 'Admin'";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([$user_id]);
+
+    header("Location: admin.php");
+    exit;
 }
 
-$sql = "SELECT d.Doctor_ID, u.FullName, u.Email, u.Phone, d.ContactNumber
-        FROM Doctors d
-        JOIN Users u ON d.User_ID = u.User_ID";
+if (isset($_GET['action']) && $_GET['action'] === 'edit') {
+    $user_id = (int)$_GET['id'];
 
-$result = $conn->query($sql);
+    $stmt = $conn->prepare("SELECT * FROM Users WHERE User_ID = ? AND UserType = 'Admin'");
+    $stmt->execute([$user_id]);
+    $row_edit = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+if (isset($_REQUEST['btnEdit'])) {
+    $user_id = (int)$_REQUEST['user_id'];
+    $fullname = $_REQUEST['fullname'];
+    $email = $_REQUEST['email'];
+    $phone = $_REQUEST['phone'];
+
+    $sql = "UPDATE Users 
+            SET FullName = ?, Email = ?, Phone = ?
+            WHERE User_ID = ? AND UserType = 'Admin'";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([$fullname, $email, $phone, $user_id]);
+
+    header("Location: admins.php");
+    exit;
+}
+
+$stmt = $conn->prepare("SELECT * FROM Users WHERE UserType = 'Admin'");
+$stmt->execute();
+$admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
