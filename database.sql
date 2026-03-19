@@ -1,0 +1,219 @@
+
+CREATE DATABASE IF NOT EXISTS mediconnect;
+USE mediconnect;
+
+CREATE TABLE Cities (
+    City_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255),
+    Region VARCHAR(255)
+);
+
+CREATE TABLE Users (
+    User_ID INT AUTO_INCREMENT PRIMARY KEY,
+    UserName VARCHAR(50),
+    Email VARCHAR(100),
+    Password VARCHAR(255),
+    FullName VARCHAR(100),
+    Address TEXT,
+    Date_Of_Birth DATE,
+    Phone VARCHAR(20),
+    ProfilePicture VARCHAR(255),
+    UserType VARCHAR(20),
+    ResetToken VARCHAR(255),
+    ResetTokenExpiry DATETIME,
+    Created_at DATETIME,
+    City_ID INT,
+    FOREIGN KEY (City_ID) REFERENCES Cities(City_ID)
+);
+
+CREATE TABLE Doctors (
+    Doctor_ID INT AUTO_INCREMENT PRIMARY KEY,
+    ContactNumber VARCHAR(20),
+    Created_at DATETIME,
+    User_ID INT,
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID)
+);
+
+CREATE TABLE Patients (
+    Patient_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Address TEXT,
+    Created_at DATETIME,
+    User_ID INT,
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID)
+);
+
+CREATE TABLE Specialization (
+    Specialization_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Description TEXT
+);
+
+CREATE TABLE Doctor_Specializations (
+    Doctor_ID INT,
+    Specialization_ID INT,
+    PRIMARY KEY (Doctor_ID, Specialization_ID),
+    FOREIGN KEY (Doctor_ID) REFERENCES Doctors(Doctor_ID),
+    FOREIGN KEY (Specialization_ID) REFERENCES Specialization(Specialization_ID)
+);
+
+CREATE TABLE Diseases (
+    Disease_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Description TEXT,
+    Symptoms TEXT,
+    Treatment TEXT,
+    Created_at DATETIME,
+    City_ID INT,
+    FOREIGN KEY (City_ID) REFERENCES Cities(City_ID)
+);
+
+CREATE TABLE DoctorDiseases (
+    Doctor_ID INT,
+    Disease_ID INT,
+    PRIMARY KEY (Doctor_ID, Disease_ID),
+    FOREIGN KEY (Doctor_ID) REFERENCES Doctors(Doctor_ID),
+    FOREIGN KEY (Disease_ID) REFERENCES Diseases(Disease_ID)
+);
+
+CREATE TABLE Hospitals (
+    Hospital_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(100),
+    Address TEXT,
+    Phone VARCHAR(20),
+    Email VARCHAR(100),
+    Created_at DATETIME,
+    City_ID INT,
+    FOREIGN KEY (City_ID) REFERENCES Cities(City_ID)
+);
+
+CREATE TABLE MedicalContent (
+    Content_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Title VARCHAR(255),
+    Category VARCHAR(50),
+    Body TEXT,
+    PublishedDate DATETIME,
+    Doctor_ID INT,
+    FOREIGN KEY (Doctor_ID) REFERENCES Doctors(Doctor_ID)
+);
+
+CREATE TABLE DoctorSchedules (
+    Schedule_ID INT AUTO_INCREMENT PRIMARY KEY,
+    AvailableDate DATE,
+    StartTime TIME,
+    EndTime TIME,
+    Status VARCHAR(20),
+    Doctor_ID INT,
+    FOREIGN KEY (Doctor_ID) REFERENCES Doctors(Doctor_ID)
+);
+
+CREATE TABLE Appointments (
+    Appointment_ID INT AUTO_INCREMENT PRIMARY KEY,
+    BookingDate DATETIME,
+    Status VARCHAR(20),
+    Notes TEXT,
+    Created_at DATETIME,
+    Patient_ID INT,
+    Doctor_ID INT,
+    Schedule_ID INT,
+    FOREIGN KEY (Patient_ID) REFERENCES Patients(Patient_ID),
+    FOREIGN KEY (Doctor_ID) REFERENCES Doctors(Doctor_ID),
+    FOREIGN KEY (Schedule_ID) REFERENCES DoctorSchedules(Schedule_ID)
+);
+
+CREATE TABLE Feedback (
+    Feedback_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Message TEXT,
+    Rating INT,
+    Created_at DATETIME,
+    Patient_ID INT,
+    Appointment_ID INT,
+    FOREIGN KEY (Patient_ID) REFERENCES Patients(Patient_ID),
+    FOREIGN KEY (Appointment_ID) REFERENCES Appointments(Appointment_ID)
+);
+
+
+CREATE TABLE Notifications (
+    Notification_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Message TEXT,
+    Type VARCHAR(50),
+    Created_at DATETIME
+);
+
+
+CREATE TABLE User_Notifications (
+    Notification_ID INT,
+    User_ID INT,
+    IsRead BOOLEAN,
+    Read_at DATETIME,
+    PRIMARY KEY (Notification_ID, User_ID),
+    FOREIGN KEY (Notification_ID) REFERENCES Notifications(Notification_ID),
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID)
+);
+
+INSERT INTO `users` (`User_ID`, `UserName`, `Email`, `Password`, `FullName`, `Address`, `Date_Of_Birth`, `ProfilePicture`, `UserType`, `ResetToken`, `ResetTokenExpiry`, `Created_at`, `City_ID`, `Specialization_ID`) VALUES (NULL, 'admin', 'admin@gmail.com', '123456', 'admin', 'cần thơ', '8/30/2007', NULL, 'admin', NULL, NULL, NULL, NULL, NULL);
+
+INSERT INTO Cities (Name, Region) VALUES
+('Hà Nội', 'Miền Bắc'),
+('TP.HCM', 'Miền Nam');
+
+INSERT INTO Users 
+(UserName, Email, Password, FullName, Address, Date_Of_Birth, Phone, ProfilePicture, UserType, Created_at, City_ID)
+VALUES
+('admin', 'admin@gmail.com', '123456', 'Quản trị viên', 'Hà Nội', '1990-01-01', '0999999999', '', 'Admin', NOW(), 1),
+('doctor1', 'doc1@gmail.com', '123456', 'Nguyễn Văn A', 'Hà Nội', '1980-01-01', '0123456789', '', 'Doctor', NOW(), 1),
+('patient1', 'pat1@gmail.com', '123456', 'Trần Thị B', 'TP.HCM', '1995-05-05', '0987654321', '', 'Patient', NOW(), 2);
+
+
+INSERT INTO Doctors (ContactNumber, Created_at, User_ID)
+VALUES
+('0123456789', NOW(), 1);
+
+INSERT INTO Patients (Address, Created_at, User_ID)
+VALUES
+('TP.HCM', NOW(), 2);
+
+INSERT INTO Specialization (Name, Description)
+VALUES
+('Tim mạch', 'Chuyên về tim'),
+('Da liễu', 'Chuyên về da');
+
+INSERT INTO Doctor_Specializations (Doctor_ID, Specialization_ID)
+VALUES
+(1, 1),
+(1, 2);
+
+INSERT INTO Diseases (Name, Description, Symptoms, Treatment, Created_at, City_ID)
+VALUES
+('Cảm cúm', 'Bệnh thông thường', 'Sốt, ho', 'Uống thuốc', NOW(), 1);
+
+INSERT INTO DoctorDiseases (Doctor_ID, Disease_ID)
+VALUES
+(1, 1);
+
+INSERT INTO Hospitals (Name, Address, Phone, Email, Created_at, City_ID)
+VALUES
+('Bệnh viện Bạch Mai', 'Hà Nội', '0123456789', 'bachmai@gmail.com', NOW(), 1);
+
+INSERT INTO MedicalContent (Title, Category, Body, PublishedDate, Doctor_ID)
+VALUES
+('Cách phòng cảm cúm', 'Sức khỏe', 'Nội dung bài viết...', NOW(), 1);
+
+INSERT INTO DoctorSchedules (AvailableDate, StartTime, EndTime, Status, Doctor_ID)
+VALUES
+('2026-03-20', '08:00:00', '10:00:00', 'Available', 1);
+
+INSERT INTO Appointments (BookingDate, Status, Notes, Created_at, Patient_ID, Doctor_ID, Schedule_ID)
+VALUES
+(NOW(), 'Booked', 'Khám tổng quát', NOW(), 1, 1, 1);
+
+INSERT INTO Feedback (Message, Rating, Created_at, Patient_ID, Appointment_ID)
+VALUES
+('Bác sĩ rất tốt', 5, NOW(), 1, 1);
+
+INSERT INTO Notifications (Message, Type, Created_at)
+VALUES
+('Bạn có lịch khám mới', 'Appointment', NOW());
+
+INSERT INTO User_Notifications (Notification_ID, User_ID, IsRead, Read_at)
+VALUES
+(1, 2, FALSE, NULL);
