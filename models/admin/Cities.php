@@ -1,5 +1,5 @@
 <?php
-require_once '../config/connectDB.php';
+require_once '../../config/connectDB.php';
 
 $conn = (new ConnectDB())->connection();
 
@@ -7,6 +7,7 @@ function getAllCities($conn) {
     $sql = "SELECT * FROM Cities ORDER BY City_ID DESC";
     return $conn->query($sql);
 }
+
 
 function getCityById($conn, $id) {
     $sql = "SELECT * FROM Cities WHERE City_ID = ?";
@@ -44,5 +45,21 @@ function searchCities($conn, $keyword) {
     $stmt->bind_param("ss", $keyword, $keyword);
     $stmt->execute();
     return $stmt->get_result();
+}
+function getCities($conn) {
+    if (isset($_GET['search'])) {
+        $keyword = $_GET['keyword'] ?? '';
+        $result = searchCities($conn, $keyword);
+    } else {
+        $result = getAllCities($conn);
+    }
+
+    $cities = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $cities[] = $row;
+        }
+    }
+    return $cities;
 }
 ?>
