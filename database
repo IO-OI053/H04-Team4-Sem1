@@ -161,14 +161,13 @@ VALUES
 ('doctor1', 'doc1@gmail.com', '123456', 'Nguyễn Văn A', 'Hà Nội', '1980-01-01', '0123456789', '', 'Doctor', NOW(), 1),
 ('patient1', 'pat1@gmail.com', '123456', 'Trần Thị B', 'TP.HCM', '1995-05-05', '0987654321', '', 'Patient', NOW(), 2);
 
-
 INSERT INTO Doctors (ContactNumber, Created_at, User_ID)
 VALUES
-('0123456789', NOW(), 1);
+('0123456789', NOW(), 2);-- đúng: user doctor
 
 INSERT INTO Patients (Address, Created_at, User_ID)
 VALUES
-('TP.HCM', NOW(), 2);
+('TP.HCM', NOW(), 3);
 
 INSERT INTO Specialization (Name, Description)
 VALUES
