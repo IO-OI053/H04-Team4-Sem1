@@ -1,69 +1,82 @@
 <?php
 session_start();
-require_once "../connect.php";
+require_once '../config/connectDB.php';
+require_once '../controllers/specializations_controller.php';
 
-$db = new ConnectDB();
-$conn = $db->connection();
+$conn = (new ConnectDB())->connection();
 
+handleSpecializationsRequest($conn);
 
-if (isset($_POST['add'])) {
-    $name = $_POST['name'];
-    $desc = $_POST['description'];
-
-    $sql = "INSERT INTO Specialization (Name, Description) VALUES (?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $name, $desc);
-    $stmt->execute();
-}
-
-if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $conn->query("DELETE FROM Specialization WHERE Specialization_ID = $id");
-}
-
-
-$result = $conn->query("SELECT * FROM Specialization");
+$specializations = getSpecializations($conn);
+$specialization_edit = getSpecializationForEdit($conn);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Manage Specializations</title>
-    <style>
-        body { font-family: Arial; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #ccc; }
-        textarea { width: 200px; height: 60px; }
-    </style>
+<meta charset="UTF-8">
+<title>Quản lý Chuyên khoa</title>
 </head>
 <body>
 
 <h2>Quản lý Chuyên khoa</h2>
 
-<form method="POST">
-    <input type="text" name="name" placeholder="Tên chuyên khoa" required>
-    <textarea name="description" placeholder="Mô tả"></textarea>
-    <button type="submit" name="add">Thêm</button>
+<!-- Form thêm / sửa -->
+<?php if ($specialization_edit): ?>
+<h3>Chỉnh sửa chuyên khoa</h3>
+<form method="post">
+    <input type="hidden" name="specialization_id" value="<?= $specialization_edit['Specialization_ID'] ?>">
+    <label>Tên:</label><br>
+    <input type="text" name="name" value="<?= htmlspecialchars($specialization_edit['Name']) ?>" required><br>
+    <label>Mô tả:</label><br>
+    <textarea name="description"><?= htmlspecialchars($specialization_edit['Description']) ?></textarea><br>
+    <button type="submit" name="btnEdit">Cập nhật</button>
+    <a href="manage_specializations.php">Hủy</a>
+</form>
+<?php else: ?>
+<h3>Thêm chuyên khoa mới</h3>
+<form method="post">
+    <label>Tên:</label><br>
+    <input type="text" name="name" required><br>
+    <label>Mô tả:</label><br>
+    <textarea name="description"></textarea><br>
+    <button type="submit" name="btnAdd">Thêm</button>
+</form>
+<?php endif; ?>
+
+<form method="get">
+    <input type="text" name="keyword" placeholder="Tìm kiếm..." value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
+    <button type="submit" name="search">Tìm kiếm</button>
 </form>
 
 <table>
-    <tr>
-        <th>ID</th>
-        <th>Tên</th>
-        <th>Mô tả</th>
-        <th>Action</th>
-    </tr>
+<tr>
+    <th>ID</th>
+    <th>Tên</th>
+    <th>Mô tả</th>
+    <th>Thao tác</th>
+</tr>
 
-    <?php while($row = $result->fetch_assoc()): ?>
+<?php if (!empty($specializations)): ?>
+    <?php foreach ($specializations as $row): ?>
+        <tr>
+            <td><?= $row['Specialization_ID'] ?></td>
+            <td><?= htmlspecialchars($row['Name']) ?></td>
+            <td><?= htmlspecialchars($row['Description']) ?></td>
+            <td>
+                <a href="?action=edit&id=<?= $row['Specialization_ID'] ?>">✏️ Sửa</a>
+                <form method="post" style="display:inline" onsubmit="return confirm('Xóa chuyên khoa này?')">
+                    <input type="hidden" name="specialization_id" value="<?= $row['Specialization_ID'] ?>">
+                    <button name="btnDelete">🗑️ Xóa</button>
+                </form>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+<?php else: ?>
     <tr>
-        <td><?= $row['Specialization_ID'] ?></td>
-        <td><?= $row['Name'] ?></td>
-        <td><?= $row['Description'] ?></td>
-        <td>
-            <a href="?delete=<?= $row['Specialization_ID'] ?>" onclick="return confirm('Xóa?')">Delete</a>
-        </td>
+        <td colspan="4">Chưa có chuyên khoa nào</td>
     </tr>
-    <?php endwhile; ?>
+<?php endif; ?>
 </table>
 
 </body>
