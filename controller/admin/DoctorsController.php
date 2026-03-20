@@ -1,47 +1,52 @@
 <?php
-require_once '../models/specializations.php';
+require_once('../../models/admin/doctors.php');
 
-function handleSpecializationsRequest($conn) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnAdd'])) {
-        $name = $_POST['name'];
-        $desc = $_POST['description'];
-        createSpecialization($conn, $name, $desc);
-        header("Location: ../views/manage_specializations.php");
-        exit();
+
+function handleDoctorsRequest($conn) {
+    $doctor_edit = null;
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['btnAdd'])) {
+            $username      = $_POST['username'];
+            $email         = $_POST['email'];
+            $password      = $_POST['password'];
+            $fullname      = $_POST['fullname'];
+            $phone         = $_POST['phone'];
+            $contactNumber = $_POST['contactNumber'] ?? '';
+
+            createDoctor($conn, $username, $email, $password, $fullname, $phone, $contactNumber);
+
+            header("Location: ../../views/admin/manage_doctors.php");
+            exit();
+        }
+
+        if (isset($_POST['btnEdit'])) {
+            $doctor_id     = (int)$_POST['doctor_id'];
+            $fullname      = $_POST['fullname'];
+            $email         = $_POST['email'];
+            $phone         = $_POST['phone'];
+            $contactNumber = $_POST['contactNumber'] ?? '';
+            updateDoctor($conn, $doctor_id, $fullname, $email, $phone, $contactNumber);
+            header("Location: ../../views/admin/manage_doctors.php");
+            exit();
+        }
+        if (isset($_POST['btnDelete'])) {
+            $doctor_id = (int)$_POST['doctor_id'];
+            $doctor = getDoctorById($conn, $doctor_id);
+            if ($doctor && $doctor['User_ID'] > 1) {
+                deleteDoctor($conn, $doctor_id);
+            }
+            header("Location: ../../views/admin/manage_doctors.php");
+            exit();
+        }
     }
 
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnEdit'])) {
-        $id   = (int)$_POST['specialization_id'];
-        $name = $_POST['name'];
-        $desc = $_POST['description'];
-        updateSpecialization($conn, $id, $name, $desc);
-        header("Location: ../views/manage_specializations.php");
-        exit();
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnDelete'])) {
-        $id = (int)$_POST['specialization_id'];
-        deleteSpecialization($conn, $id);
-        header("Location: ../views/manage_specializations.php");
-        exit();
-    }
-}
-
-function getSpecializations($conn) {
-    if (isset($_GET['search'])) {
-        $keyword = $_GET['keyword'] ?? '';
-        return searchSpecializations($conn, $keyword);
-    }
-    return getAllSpecializations($conn);
-}
-
-function getSpecializationForEdit($conn) {
     if (isset($_GET['action']) && $_GET['action'] === 'edit') {
-        $id = (int)$_GET['id'];
-        return getSpecializationById($conn, $id);
+        $doctor_id = (int)($_GET['id'] ?? 0);
+        if ($doctor_id > 0) {
+            $doctor_edit = getDoctorById($conn, $doctor_id);
+        }
     }
-    return null;
-}
-?>
 
+    return $doctor_edit;
+}
