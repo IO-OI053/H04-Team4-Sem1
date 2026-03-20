@@ -1,48 +1,43 @@
 <?php
-require_once '../config/connectDB.php';
+require_once('../../models/admin/Specializations.php');
 
-$conn = (new ConnectDB())->connection();
+function handleSpecializationsRequest($conn) {
 
-function getAllSpecializations($conn) {
-    $sql = "SELECT * FROM Specialization ORDER BY Specialization_ID DESC";
-    return $conn->query($sql);
-}
+    $specialization_edit = null;
 
-function getSpecializationById($conn, $id) {
-    $sql = "SELECT * FROM Specialization WHERE Specialization_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
-}
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-function createSpecialization($conn, $name, $desc) {
-    $sql = "INSERT INTO Specialization (Name, Description) VALUES (?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $name, $desc);
-    return $stmt->execute();
-}
+        if (isset($_POST['btnAdd'])) {
+            createSpecialization($conn, $_POST['name'], $_POST['description']);
+            header("Location: ../admin/manage_specializations.php");
+            exit();
+        }
 
-function updateSpecialization($conn, $id, $name, $desc) {
-    $sql = "UPDATE Specialization SET Name = ?, Description = ? WHERE Specialization_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssi", $name, $desc, $id);
-    return $stmt->execute();
-}
+        if (isset($_POST['btnEdit'])) {
+            updateSpecialization(
+                $conn,
+                $_POST['specialization_id'],
+                $_POST['name'],
+                $_POST['description']
+            );
+            header("Location: ../admin/manage_specializations.php");
+            exit();
+        }
 
-function deleteSpecialization($conn, $id) {
-    $sql = "DELETE FROM Specialization WHERE Specialization_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    return $stmt->execute();
-}
+        if (isset($_POST['btnDelete'])) {
+            deleteSpecialization($conn, $_POST['specialization_id']);
+            header("Location: ../admin/manage_specializations.php");
+            exit();
+        }
+    }
 
-function searchSpecializations($conn, $keyword) {
-    $keyword = "%$keyword%";
-    $sql = "SELECT * FROM Specialization WHERE Name LIKE ? OR Description LIKE ? ORDER BY Specialization_ID DESC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $keyword, $keyword);
-    $stmt->execute();
-    return $stmt->get_result();
+    if (isset($_GET['action']) && $_GET['action'] === 'edit') {
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id > 0) {
+            $specialization_edit = getSpecializationById($conn, $id);
+        }
+    }
+
+    return $specialization_edit;
 }
 ?>
