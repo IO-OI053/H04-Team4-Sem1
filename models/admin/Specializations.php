@@ -1,34 +1,48 @@
 <?php
 require_once '../config/connectDB.php';
 
-class Specializations {
+$conn = (new ConnectDB())->connection();
 
-    private $conn;
+function getAllSpecializations($conn) {
+    $sql = "SELECT * FROM Specialization ORDER BY Specialization_ID DESC";
+    return $conn->query($sql);
+}
 
-    public function __construct() {
-        $db = new ConnectDB();
-        $this->conn = $db->connection();
-    }
+function getSpecializationById($conn, $id) {
+    $sql = "SELECT * FROM Specialization WHERE Specialization_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
 
- 
-    public function getAll() {
-        $sql = "SELECT * FROM Specialization";
-        return $this->conn->query($sql);
-    }
+function createSpecialization($conn, $name, $desc) {
+    $sql = "INSERT INTO Specialization (Name, Description) VALUES (?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $name, $desc);
+    return $stmt->execute();
+}
 
-  
-    public function create($name, $desc) {
-        $sql = "INSERT INTO Specialization (Name, Description) VALUES (?, ?)";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ss", $name, $desc);
-        return $stmt->execute();
-    }
+function updateSpecialization($conn, $id, $name, $desc) {
+    $sql = "UPDATE Specialization SET Name = ?, Description = ? WHERE Specialization_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $name, $desc, $id);
+    return $stmt->execute();
+}
 
-    public function delete($id) {
-        $sql = "DELETE FROM Specialization WHERE Specialization_ID = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
+function deleteSpecialization($conn, $id) {
+    $sql = "DELETE FROM Specialization WHERE Specialization_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
+}
+
+function searchSpecializations($conn, $keyword) {
+    $keyword = "%$keyword%";
+    $sql = "SELECT * FROM Specialization WHERE Name LIKE ? OR Description LIKE ? ORDER BY Specialization_ID DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $keyword, $keyword);
+    $stmt->execute();
+    return $stmt->get_result();
 }
 ?>
