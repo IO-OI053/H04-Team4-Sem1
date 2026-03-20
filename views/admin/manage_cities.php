@@ -1,14 +1,15 @@
 <?php
 session_start();
-require_once '../config/connectDB.php';
-require_once '../controllers/cities_controller.php';
+$username = $_SESSION['UserName'] ?? 'Admin';
+
+require_once('../../config/connectDB.php');
+require_once('../../controller/admin/CitiesController.php');
 
 $conn = (new ConnectDB())->connection();
 
-handleCitiesRequest($conn);
+$city_edit = handleCitiesRequest($conn);
+$cities = getCities($conn);  
 
-$cities = getCities($conn);
-$city_edit = getCityForEdit($conn);
 ?>
 
 <!DOCTYPE html>
@@ -16,14 +17,6 @@ $city_edit = getCityForEdit($conn);
 <head>
 <meta charset="UTF-8">
 <title>Quản lý Thành phố</title>
-<style>
-body { font-family: Arial; margin: 20px; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-input[type=text] { width: 300px; padding: 5px; margin-bottom: 10px; }
-button { padding: 5px 10px; margin-right: 5px; }
-form { margin-bottom: 20px; }
-</style>
 </head>
 <body>
 
@@ -52,37 +45,32 @@ form { margin-bottom: 20px; }
 <?php endif; ?>
 
 <form method="get">
-    <input type="text" name="keyword" placeholder="Tìm kiếm..." value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
-    <button type="submit" name="search">Tìm kiếm</button>
+    <input type="text" name="keyword" placeholder="Tìm theo tên hoặc vùng" value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
+    <button name="search">🔍 Tìm</button>
 </form>
-
 <table>
 <tr>
-    <th>ID</th>
-    <th>Tên</th>
-    <th>Khu vực</th>
-    <th>Thao tác</th>
+    <th>Name</th>
+    <th>Region</th>
+    <th>Hành động</th>
 </tr>
 
 <?php if (!empty($cities)): ?>
-    <?php foreach ($cities as $row): ?>
-        <tr>
-            <td><?= $row['City_ID'] ?></td>
-            <td><?= htmlspecialchars($row['Name']) ?></td>
-            <td><?= htmlspecialchars($row['Region']) ?></td>
-            <td>
-                <a href="?action=edit&id=<?= $row['City_ID'] ?>">✏️ Sửa</a>
-                <form method="post" style="display:inline" onsubmit="return confirm('Xóa thành phố này?')">
-                    <input type="hidden" name="city_id" value="<?= $row['City_ID'] ?>">
-                    <button name="btnDelete">🗑️ Xóa</button>
-                </form>
-            </td>
-        </tr>
+    <?php foreach ($cities as $city): ?>
+    <tr>
+        <td><?= htmlspecialchars($city['Name']) ?></td>
+        <td><?= htmlspecialchars($city['Region']) ?></td>
+        <td>
+            <a href="?action=edit&id=<?= $city['City_ID'] ?>">✏️ Sửa</a>
+            <form method="post" style="display:inline" onsubmit="return confirm('Xóa thành phố này?')">
+                <input type="hidden" name="city_id" value="<?= $city['City_ID'] ?>">
+                <button name="btnDelete">🗑️ Xóa</button>
+            </form>
+        </td>
+    </tr>
     <?php endforeach; ?>
 <?php else: ?>
-    <tr>
-        <td colspan="4">Chưa có thành phố nào</td>
-    </tr>
+<tr><td colspan="3">Chưa có thành phố</td></tr>
 <?php endif; ?>
 </table>
 
