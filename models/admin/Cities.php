@@ -1,32 +1,48 @@
 <?php
 require_once '../config/connectDB.php';
 
-class Cities {
+$conn = (new ConnectDB())->connection();
 
-    private $conn;
+function getAllCities($conn) {
+    $sql = "SELECT * FROM Cities ORDER BY City_ID DESC";
+    return $conn->query($sql);
+}
 
-    public function __construct() {
-        $db = new ConnectDB();
-        $this->conn = $db->connection();
-    }
+function getCityById($conn, $id) {
+    $sql = "SELECT * FROM Cities WHERE City_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
 
-    public function getAll() {
-        $sql = "SELECT * FROM Cities";
-        return $this->conn->query($sql);
-    }
+function createCity($conn, $name, $region) {
+    $sql = "INSERT INTO Cities (Name, Region) VALUES (?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $name, $region);
+    return $stmt->execute();
+}
 
-    public function create($name, $region) {
-        $sql = "INSERT INTO Cities (Name, Region) VALUES (?, ?)";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("ss", $name, $region);
-        return $stmt->execute();
-    }
+function updateCity($conn, $id, $name, $region) {
+    $sql = "UPDATE Cities SET Name = ?, Region = ? WHERE City_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssi", $name, $region, $id);
+    return $stmt->execute();
+}
 
-    public function delete($id) {
-        $sql = "DELETE FROM Cities WHERE City_ID = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
-    }
+function deleteCity($conn, $id) {
+    $sql = "DELETE FROM Cities WHERE City_ID = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
+}
+
+function searchCities($conn, $keyword) {
+    $keyword = "%$keyword%";
+    $sql = "SELECT * FROM Cities WHERE Name LIKE ? OR Region LIKE ? ORDER BY City_ID DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $keyword, $keyword);
+    $stmt->execute();
+    return $stmt->get_result();
 }
 ?>
