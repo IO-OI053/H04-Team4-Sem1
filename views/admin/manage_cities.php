@@ -29,7 +29,6 @@ form { margin-bottom: 20px; }
 
 <h2>Quản lý Thành phố</h2>
 
-<!-- Form thêm / sửa -->
 <?php if ($city_edit): ?>
 <h3>Chỉnh sửa thành phố</h3>
 <form method="post">
