@@ -1,82 +1,64 @@
 <?php
 session_start();
+if (!isset($_SESSION['username'])) {
+    header("Location: ../authentication.php");
+    exit();
+}
+
 require_once '../config/connectDB.php';
-require_once '../controllers/cities_controller.php';
+require_once '../controllers/dashboard_controller.php';
 
 $conn = (new ConnectDB())->connection();
-
-handleCitiesRequest($conn);
-
-$cities = getCities($conn);
-$city_edit = getCityForEdit($conn);
+$stats = handleDashboard($conn);
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quản lý Thành phố</title>
+<title>Admin Dashboard</title>
+<style>
+body { font-family: Arial; margin: 20px; }
+nav a { margin-right: 10px; text-decoration: none; }
+.stats { display: flex; gap: 20px; margin-top: 20px; }
+.card { padding: 20px; border: 1px solid #ccc; width: 150px; text-align: center; }
+</style>
 </head>
 <body>
 
-<h2>Quản lý Thành phố</h2>
+<header>
+    <h1>Trang Quản Trị</h1>
+    <p>Xin chào: <?= htmlspecialchars($_SESSION['username']) ?></p>
+</header>
 
-<?php if ($city_edit): ?>
-<h3>Chỉnh sửa thành phố</h3>
-<form method="post">
-    <input type="hidden" name="city_id" value="<?= $city_edit['City_ID'] ?>">
-    <label>Tên:</label><br>
-    <input type="text" name="name" value="<?= htmlspecialchars($city_edit['Name']) ?>" required><br>
-    <label>Khu vực:</label><br>
-    <input type="text" name="region" value="<?= htmlspecialchars($city_edit['Region']) ?>" required><br>
-    <button type="submit" name="btnEdit">Cập nhật</button>
-    <a href="manage_cities.php">Hủy</a>
-</form>
-<?php else: ?>
-<h3>Thêm thành phố mới</h3>
-<form method="post">
-    <label>Tên:</label><br>
-    <input type="text" name="name" required><br>
-    <label>Khu vực:</label><br>
-    <input type="text" name="region" required><br>
-    <button type="submit" name="btnAdd">Thêm</button>
-</form>
-<?php endif; ?>
+<nav>
+    <a href="admin_dashboard.php">Dashboard</a>
+    <a href="manage_users.php">Users</a>
+    <a href="manage_doctors.php">Doctors</a>
+    <a href="manage_patients.php">Patients</a>
+</nav>
 
-<form method="get">
-    <input type="text" name="keyword" placeholder="Tìm kiếm..." value="<?= htmlspecialchars($_GET['keyword'] ?? '') ?>">
-    <button type="submit" name="search">Tìm kiếm</button>
-</form>
-
-<table>
-<tr>
-    <th>ID</th>
-    <th>Tên</th>
-    <th>Khu vực</th>
-    <th>Thao tác</th>
-</tr>
-
-<?php if (!empty($cities)): ?>
-    <?php foreach ($cities as $row): ?>
-        <tr>
-            <td><?= $row['City_ID'] ?></td>
-            <td><?= htmlspecialchars($row['Name']) ?></td>
-            <td><?= htmlspecialchars($row['Region']) ?></td>
-            <td>
-                <a href="?action=edit&id=<?= $row['City_ID'] ?>">✏️ Sửa</a>
-                <form method="post" style="display:inline" onsubmit="return confirm('Xóa thành phố này?')">
-                    <input type="hidden" name="city_id" value="<?= $row['City_ID'] ?>">
-                    <button name="btnDelete">🗑️ Xóa</button>
-                </form>
-            </td>
-        </tr>
-    <?php endforeach; ?>
-<?php else: ?>
-    <tr>
-        <td colspan="4">Chưa có thành phố nào</td>
-    </tr>
-<?php endif; ?>
-</table>
+<div class="container">
+    <h2>Thống kê hệ thống</h2>
+    <div class="stats">
+        <div class="card">
+            <h3>Users</h3>
+            <h2><?= $stats['users'] ?></h2>
+        </div>
+        <div class="card">
+            <h3>Doctors</h3>
+            <h2><?= $stats['doctors'] ?></h2>
+        </div>
+        <div class="card">
+            <h3>Patients</h3>
+            <h2><?= $stats['patients'] ?></h2>
+        </div>
+        <div class="card">
+            <h3>Appointments</h3>
+            <h2><?= $stats['appointments'] ?></h2>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
